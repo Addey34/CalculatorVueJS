@@ -1,6 +1,5 @@
 <template>
   <div class="calculator" ref="calculator" tabindex="0" @click="retainFocus">
-    >
     <CalcDisplay :display="currentDisplay" @delete-last="deleteLastCharacter" />
     <div class="buttons">
       <!-- Mode élémentaire : chiffres et opérateurs basiques -->
@@ -249,12 +248,9 @@ export default {
 
     calculateScientific(func) {
       if (this.currentDisplay === '' || this.currentDisplay.endsWith('(')) {
-        // Si l'affichage est vide ou se termine par une parenthèse ouverte,
-        // on ajoute simplement la fonction avec une parenthèse ouverte
         this.currentDisplay += `${func}(`;
         this.expression += `${func}(`;
       } else {
-        // Sinon, on calcule le résultat
         let angle = parseFloat(this.currentDisplay);
         if (!isNaN(angle)) {
           let result;
@@ -338,7 +334,6 @@ export default {
 
         let result = evaluate(sanitizedExpression);
 
-        // Arrondir le résultat à un nombre raisonnable de décimales
         result = Number(result.toFixed(10));
 
         this.currentDisplay = result.toString();
