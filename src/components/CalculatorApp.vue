@@ -1,5 +1,6 @@
 <template>
-  <div class="calculator">
+  <div class="calculator" ref="calculator" tabindex="0" @click="retainFocus">
+    >
     <CalcDisplay :display="currentDisplay" @delete-last="deleteLastCharacter" />
     <div class="buttons">
       <!-- Mode élémentaire : chiffres et opérateurs basiques -->
@@ -24,7 +25,7 @@
         <CalcButton label="7" @button-click="handleInput('7')" />
         <CalcButton label="8" @button-click="handleInput('8')" />
         <CalcButton label="9" @button-click="handleInput('9')" />
-        <CalcButton label="x" @button-click="handleOperator('*')" isOperator />
+        <CalcButton label="x" @button-click="handleOperator('x')" isOperator />
         <CalcButton label="4" @button-click="handleInput('4')" />
         <CalcButton label="5" @button-click="handleInput('5')" />
         <CalcButton label="6" @button-click="handleInput('6')" />
@@ -48,7 +49,6 @@
         <CalcButton label=")" @button-click="handleInput(')')" isSpecial />
         <CalcButton label="π" @button-click="handleConstant('π')" isSpecial />
         <CalcButton label="e" @button-click="handleConstant('e')" isSpecial />
-
         <CalcButton
           label="sin"
           @button-click="calculateScientific('sin')"
@@ -137,14 +137,12 @@
 import { evaluate } from 'mathjs';
 import CalcButton from './CalcButton.vue';
 import CalcDisplay from './CalcDisplay.vue';
-// import CalcHistory from './CalcHistory.vue';
 
 export default {
   name: 'CalculatorApp',
   components: {
     CalcButton,
     CalcDisplay,
-    // CalcHistory,
   },
   data() {
     return {
@@ -163,23 +161,20 @@ export default {
       this.isScientificMode = !this.isScientificMode;
     },
     handleInput(value) {
-      // Met à jour l'affichage et l'expression avec la valeur entrée
       this.currentDisplay += value;
       this.expression += value;
     },
     handleOperator(operator) {
-      // Empêche les opérateurs successifs ou mal placés
       if (this.currentDisplay === '' && operator !== '-') return;
-      this.currentDisplay += operator;
-      this.expression += operator;
+      const operatorToUse = operator === 'x' ? '*' : operator;
+      this.currentDisplay += operator === 'x' ? 'x' : operator;
+      this.expression += operatorToUse;
     },
     deleteLastCharacter() {
-      // Supprime le dernier caractère
       this.currentDisplay = this.currentDisplay.slice(0, -1);
       this.expression = this.expression.slice(0, -1);
     },
     clear() {
-      // Réinitialise l'affichage et l'expression
       this.currentDisplay = '';
       this.expression = '';
     },
@@ -194,45 +189,49 @@ export default {
       }
     },
     handleKeyPress(event) {
+      if (this.$refs.calculator !== document.activeElement) return;
       const key = event.key;
 
-      // Empêche l'interaction si le focus n'est pas sur la calculatrice
       if (this.$refs.calculator !== document.activeElement) return;
 
-      // Gestion des chiffres
       if (!isNaN(parseInt(key))) {
         this.handleInput(key);
       }
 
-      // Gestion des opérateurs
-      if (['+', '-', '*', '/', '%'].includes(key)) {
+      if (['+', '-', 'x', '/', '%'].includes(key)) {
         this.handleOperator(key);
       }
 
-      // Touche "Enter" pour calculer
       if (key === 'Enter') {
         this.compute();
       }
 
-      // Touche "Backspace" pour supprimer
       if (key === 'Backspace') {
         this.deleteLastCharacter();
       }
 
-      // Touche "Escape" pour tout effacer
       if (key === 'Escape') {
         this.clear();
       }
 
-      // Touche "." pour ajouter un point
       if (key === '.') {
         this.handleInput('.');
       }
     },
+    retainFocus() {
+      // Réactive le focus sur la calculatrice après un clic
+      this.$refs.calculator.focus();
+    },
   },
   mounted() {
-    // Focus sur la calculatrice à l'initialisation pour capter les touches
-    this.$refs.calculator.focus();
+    setTimeout(() => {
+      this.$refs.calculator.focus();
+    }, 50);
+
+    window.addEventListener('keydown', this.handleKeyPress);
+  },
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.handleKeyPress);
   },
 };
 </script>
@@ -260,6 +259,7 @@ export default {
   width: 100%;
 }
 .toggle {
+  margin-top: 10px;
   grid-column: span 4;
   background-color: #555;
   color: #fff;
