@@ -317,18 +317,24 @@ export default {
           .replace(/π/g, Math.PI)
           .replace(/e/g, Math.E);
 
-        // Convertir les angles en radians pour les fonctions trigonométriques
         sanitizedExpression = sanitizedExpression.replace(
           /(sin|cos|tan)\(([^)]+)\)/g,
-          (match, func, angle) => `${func}((${angle}) * Math.PI / 180)`
+          (match, func, angle) => `Math.${func}((${angle}) * Math.PI / 180)`
         );
 
-        // Gérer les fonctions trigonométriques inverses
         sanitizedExpression = sanitizedExpression.replace(
           /(arcsin|arccos|arctan)\(([^)]+)\)/g,
           (match, func, value) => {
             const mathFunc = func.replace('arc', 'a');
             return `(Math.${mathFunc}(${value}) * 180 / Math.PI)`;
+          }
+        );
+
+        sanitizedExpression = sanitizedExpression.replace(
+          /(sqrt|log|ln|pow|exp)\(([^)]+)\)/g,
+          (match, func, value) => {
+            if (func === 'ln') func = 'log';
+            return `Math.${func}(${value})`;
           }
         );
 
