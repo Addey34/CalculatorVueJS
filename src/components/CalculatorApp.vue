@@ -46,8 +46,9 @@
         />
         <CalcButton label="(" @button-click="handleInput('(')" isSpecial />
         <CalcButton label=")" @button-click="handleInput(')')" isSpecial />
-        <CalcButton label="π" @button-click="handlePi" isSpecial />
-        <CalcButton label="e" @button-click="handleE" isSpecial />
+        <CalcButton label="π" @button-click="handleConstant('π')" isSpecial />
+        <CalcButton label="e" @button-click="handleConstant('e')" isSpecial />
+
         <CalcButton
           label="sin"
           @button-click="calculateScientific('sin')"
@@ -88,6 +89,22 @@
           @button-click="calculateScientific('exp')"
           isSpecial
         />
+        <CalcButton label="xʸ" @button-click="startExponentiation" isSpecial />
+        <CalcButton
+          label="arcsin"
+          @button-click="calculateScientific('arcsin')"
+          isSpecial
+        />
+        <CalcButton
+          label="arccos"
+          @button-click="calculateScientific('arccos')"
+          isSpecial
+        />
+        <CalcButton
+          label="arctan"
+          @button-click="calculateScientific('arctan')"
+          isSpecial
+        />
         <CalcButton label="AC" @button-click="clear" isClear />
         <CalcButton
           label="+/-"
@@ -117,20 +134,24 @@
 </template>
 
 <script>
+import { evaluate } from 'mathjs';
 import CalcButton from './CalcButton.vue';
 import CalcDisplay from './CalcDisplay.vue';
+// import CalcHistory from './CalcHistory.vue';
 
 export default {
   name: 'CalculatorApp',
   components: {
     CalcButton,
     CalcDisplay,
+    // CalcHistory,
   },
   data() {
     return {
-      currentDisplay: '0',
+      currentDisplay: '',
       expression: '',
       isScientificMode: false,
+      history: [],
       constants: {
         π: Math.PI,
         e: Math.E,
@@ -142,86 +163,76 @@ export default {
       this.isScientificMode = !this.isScientificMode;
     },
     handleInput(value) {
-      if (value === '.' && this.currentDisplay.includes('.')) return;
-      if (this.currentDisplay === '0' && value !== '.') {
-        this.currentDisplay = value;
-      } else {
-        this.currentDisplay += value;
-      }
+      // Met à jour l'affichage et l'expression avec la valeur entrée
+      this.currentDisplay += value;
       this.expression += value;
     },
     handleOperator(operator) {
-      if (this.currentDisplay !== '0') {
-        this.compute();
-      }
-      this.expression += ` ${operator} `;
-    },
-    clear() {
-      if (this.currentDisplay !== '0') {
-        this.currentDisplay = '0';
-      } else {
-        this.expression = '';
-        this.currentDisplay = '0';
-      }
+      // Empêche les opérateurs successifs ou mal placés
+      if (this.currentDisplay === '' && operator !== '-') return;
+      this.currentDisplay += operator;
+      this.expression += operator;
     },
     deleteLastCharacter() {
-      this.currentDisplay = this.currentDisplay.slice(0, -1) || '0';
+      // Supprime le dernier caractère
+      this.currentDisplay = this.currentDisplay.slice(0, -1);
+      this.expression = this.expression.slice(0, -1);
+    },
+    clear() {
+      // Réinitialise l'affichage et l'expression
+      this.currentDisplay = '';
+      this.expression = '';
     },
     compute() {
       try {
-        const sanitizedExpression = this.expression
-          .replace(/π/g, Math.PI)
-          .replace(/e/g, Math.E);
-        const result = eval(sanitizedExpression);
+        const result = evaluate(this.expression);
+        this.history.push(`${this.expression} = ${result}`);
         this.currentDisplay = result.toString();
         this.expression = result.toString();
-      } catch (error) {
+      } catch {
         this.currentDisplay = 'Erreur';
-        this.expression = '';
       }
     },
-    calculateScientific(func) {
-      const number = parseFloat(this.currentDisplay);
-      let result;
-      switch (func) {
-        case 'sin':
-          result = Math.sin(number);
-          break;
-        case 'cos':
-          result = Math.cos(number);
-          break;
-        case 'tan':
-          result = Math.tan(number);
-          break;
-        case 'log':
-          result = Math.log10(number);
-          break;
-        case 'ln':
-          result = Math.log(number);
-          break;
-        case 'sqrt':
-          result = Math.sqrt(number);
-          break;
-        case 'pow':
-          result = Math.pow(number, 2);
-          break;
-        case 'exp':
-          result = Math.exp(number);
-          break;
-        default:
-          return;
+    handleKeyPress(event) {
+      const key = event.key;
+
+      // Empêche l'interaction si le focus n'est pas sur la calculatrice
+      if (this.$refs.calculator !== document.activeElement) return;
+
+      // Gestion des chiffres
+      if (!isNaN(parseInt(key))) {
+        this.handleInput(key);
       }
-      this.currentDisplay = result.toString();
-      this.expression = result.toString();
+
+      // Gestion des opérateurs
+      if (['+', '-', '*', '/', '%'].includes(key)) {
+        this.handleOperator(key);
+      }
+
+      // Touche "Enter" pour calculer
+      if (key === 'Enter') {
+        this.compute();
+      }
+
+      // Touche "Backspace" pour supprimer
+      if (key === 'Backspace') {
+        this.deleteLastCharacter();
+      }
+
+      // Touche "Escape" pour tout effacer
+      if (key === 'Escape') {
+        this.clear();
+      }
+
+      // Touche "." pour ajouter un point
+      if (key === '.') {
+        this.handleInput('.');
+      }
     },
-    handlePi() {
-      this.expression += Math.PI;
-      this.currentDisplay += 'π';
-    },
-    handleE() {
-      this.expression += Math.E;
-      this.currentDisplay += 'e';
-    },
+  },
+  mounted() {
+    // Focus sur la calculatrice à l'initialisation pour capter les touches
+    this.$refs.calculator.focus();
   },
 };
 </script>
