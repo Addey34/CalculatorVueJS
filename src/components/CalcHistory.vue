@@ -19,61 +19,53 @@ export default {
 </script>
 
 <style scoped>
-/* Container de l'historique avec une hauteur maximale et un défilement vertical */
 .history {
   display: block;
   width: 100%;
-  max-width: 450px; /* Largeur maximale de l'historique */
-  max-height: 80px; /* Limite de la hauteur */
-  overflow-y: auto; /* Activation du défilement */
-  padding-right: 10px; /* Ajoute de l'espace à droite pour éviter que la scrollbar touche le bord */
-  background-color: rgba(0, 0, 0, 0.2); /* Fond léger */
-  border-radius: 8px; /* Coins arrondis pour une meilleure esthétique */
+  max-width: 450px;
+  max-height: 80px;
+  overflow-y: auto;
+  padding-right: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
   margin-bottom: 10px;
 }
 
 .history-list {
-  list-style-type: none; /* Retire les puces */
-  padding: 0; /* Pas de padding */
-  margin: 0; /* Pas de marge */
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .history-item {
-  text-align: center; /* Texte centré */
-  margin: 5px 0; /* Espacement vertical entre les éléments */
-  color: white; /* Texte en blanc */
-  font-size: 0.9em; /* Taille de police plus petite pour l'historique */
+  text-align: left;
+  margin: 5px 10px;
+  color: white;
+  font-size: 1em;
 }
 
-/* Personnalisation de la barre de défilement */
 .history::-webkit-scrollbar {
-  width: 8px; /* Largeur de la barre de défilement */
+  width: 8px;
 }
 
 .history::-webkit-scrollbar-thumb {
-  background-color: rgba(
-    255,
-    255,
-    255,
-    0.6
-  ); /* Couleur de la barre de défilement */
-  border-radius: 10px; /* Coins arrondis */
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
 }
 
 .history::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.9); /* Couleur au survol */
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .history::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2); /* Fond de la barre de défilement */
-  border-radius: 10px; /* Coins arrondis */
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
 
-/* Mise en page responsive pour les petits écrans */
 @media (max-width: 400px) {
   .history {
-    width: 100%; /* Largeur à 100% pour les petits écrans */
-    max-width: 320px; /* Largeur maximale plus petite */
+    width: 100%;
+    max-width: 320px;
   }
 }
 </style>

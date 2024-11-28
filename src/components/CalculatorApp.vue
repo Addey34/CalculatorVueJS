@@ -186,9 +186,19 @@
 </template>
 
 <script>
+import {
+  calculateScientific,
+  clear,
+  compute,
+  deleteLastCharacter,
+  handleConstant,
+  handleInput,
+  handleOperator,
+} from '../utils/calculatorUtils.js';
 import CalcButton from './CalcButton.vue';
 import CalcDisplay from './CalcDisplay.vue';
 import CalcHistory from './CalcHistory.vue';
+3;
 
 export default {
   name: 'CalculatorApp',
@@ -204,233 +214,61 @@ export default {
       showHistory: false,
       isScientificMode: false,
       history: [],
-      constants: {
-        π: Math.PI,
-        e: Math.E,
-      },
     };
   },
   methods: {
     handleInput(value) {
-      // Si la dernière entrée est une constante et que l'on tape un chiffre
-      if (/[eπ]$/.test(this.currentDisplay) && /[0-9]$/.test(value)) {
-        this.currentDisplay += ' x ' + value;
-        this.expression += ' x ' + value;
-        return;
-      }
-
-      // Si la dernière entrée est un nombre et que l'on tape une constante
-      if (/[0-9]$/.test(this.currentDisplay) && /[eπ]$/.test(value)) {
-        this.currentDisplay += ' x ' + value;
-        this.expression += ' x ' + this.constants[value];
-        return;
-      }
-
-      // Si la dernière entrée est une parenthèse fermante et qu'on tape un chiffre
-      if (/\)$/.test(this.currentDisplay) && /[0-9]$/.test(value)) {
-        this.currentDisplay += ' x ' + value;
-        this.expression += ' x ' + value;
-        return;
-      }
-
-      // Si l'entrée est une parenthèse ouvrante '('
-      if (value === '(') {
-        this.currentDisplay += value;
-        this.expression += value;
-        return;
-      }
-
-      // Si l'entrée est une parenthèse fermante ')'
-      if (value === ')') {
-        this.currentDisplay += value;
-        this.expression += value;
-        return;
-      }
-
-      this.currentDisplay += value;
-      this.expression += value;
+      const result = handleInput(value, this.currentDisplay, this.expression);
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     handleConstant(constant) {
-      if (/[eπ]$/.test(this.currentDisplay)) {
-        this.currentDisplay += ' x ' + constant;
-        this.expression += ' x ' + this.constants[constant];
-        return;
-      }
-
-      if (this.currentDisplay && /[0-9)]$/.test(this.currentDisplay)) {
-        this.currentDisplay += ' x ';
-        this.expression += ' x ';
-      }
-      this.currentDisplay += constant;
-      this.expression += this.constants[constant];
+      const result = handleConstant(
+        constant,
+        this.currentDisplay,
+        this.expression
+      );
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     handleOperator(operator) {
-      if (operator)
-        if (!this.currentDisplay.trim()) {
-          return;
-        }
-      if (operator === '+/-') {
-        const match = this.currentDisplay.match(
-          /([+-]?\d*\.?\d+)(?!.*[+\-x*/^%])/
-        );
-
-        if (match) {
-          const lastNumber = match[0];
-
-          const toggledNumber = lastNumber.startsWith('-')
-            ? lastNumber.slice(1)
-            : `-${lastNumber}`;
-
-          this.currentDisplay =
-            this.currentDisplay.slice(0, -lastNumber.length) + toggledNumber;
-          console.log('Nouvel affichage:', this.currentDisplay);
-
-          this.expression = this.currentDisplay;
-        }
-
-        return;
-      }
-
-      // Si l'avant dernière entrée est un opérateur et qu'on entre un autre opérateur
-      if (
-        /[+\-x*/^%]\s?$/.test(this.currentDisplay.trimEnd()) &&
-        /[+\-x*/^%]/.test(operator)
-      ) {
-        this.currentDisplay =
-          this.currentDisplay.slice(0, -3).trimEnd() + ' ' + operator + ' ';
-        this.expression =
-          this.expression.slice(0, -3).trimEnd() + ' ' + operator + ' ';
-        return;
-      }
-
-      if (operator === '*') {
-        operator = 'x';
-      }
-      this.currentDisplay += operator;
-      this.expression += operator;
+      const result = handleOperator(
+        operator,
+        this.currentDisplay,
+        this.expression
+      );
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     calculateScientific(func) {
-      if (this.currentDisplay === '' || this.currentDisplay.endsWith('(')) {
-        this.currentDisplay += `${func}( `;
-        this.expression += `${func}( `;
-      } else {
-        let angle = parseFloat(this.currentDisplay);
-        if (!isNaN(angle)) {
-          let result;
-          switch (func) {
-            case 'sin':
-              result = Math.sin((angle * Math.PI) / 180);
-              break;
-            case 'cos':
-              result = Math.cos((angle * Math.PI) / 180);
-              break;
-            case 'tan':
-              result = Math.tan((angle * Math.PI) / 180);
-              break;
-            case 'arcsin':
-            case 'asin':
-              result = (Math.asin(angle) * 180) / Math.PI;
-              break;
-            case 'arccos':
-            case 'acos':
-              result = (Math.acos(angle) * 180) / Math.PI;
-              break;
-            case 'arctan':
-            case 'atan':
-              result = (Math.atan(angle) * 180) / Math.PI;
-              break;
-            case 'log':
-              result = Math.log10(angle);
-              break;
-            case 'ln':
-              result = Math.log(angle);
-              break;
-            case 'sqrt':
-              result = Math.sqrt(angle);
-              break;
-            case 'pow':
-              result = Math.pow(angle, 2);
-              break;
-            case 'exp':
-              result = Math.exp(angle);
-              break;
-            default:
-              result = NaN;
-          }
-          this.currentDisplay = result.toString();
-          this.expression = result.toString();
-        }
+      const result = calculateScientific(
+        func,
+        this.currentDisplay,
+        this.expression
+      );
+      if (this.currentDisplay) {
+        this.history.push(
+          `${func}( ${this.currentDisplay} ) = ${result.currentDisplay}`
+        );
       }
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     deleteLastCharacter() {
-      this.currentDisplay = this.currentDisplay.slice(0, -1);
-      this.expression = this.expression.slice(0, -1);
+      const result = deleteLastCharacter(this.currentDisplay, this.expression);
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     clear() {
-      this.currentDisplay = '';
-      this.expression = '';
+      const result = clear();
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
-
     compute() {
-      try {
-        let sanitizedExpression = this.expression
-          .replace(/x/g, '*')
-          .replace(/π/g, Math.PI)
-          .replace(/e/g, Math.E);
-
-        // Gère les fonctions trigonométriques en degrés
-        sanitizedExpression = sanitizedExpression.replace(
-          /(sin|cos|tan)\(([^)]+)\)/g,
-          (match, func, angle) => `Math.${func}(((${angle})) * Math.PI / 180)`
-        );
-
-        // Gère les fonctions trigonométriques inverses
-        sanitizedExpression = sanitizedExpression.replace(
-          /(arcsin|arccos|arctan)\(([^)]+)\)/g,
-          (match, func, value) => {
-            const mathFunc = func.replace('arc', 'a'); // arcsin -> asin
-            return `(Math.${mathFunc}(${value}) * 180 / Math.PI)`;
-          }
-        );
-
-        // Gère les autres fonctions scientifiques
-        sanitizedExpression = sanitizedExpression.replace(
-          /(sqrt|log|ln|pow|exp)\(([^)]+)\)/g,
-          (match, func, value) => {
-            if (func === 'ln') {
-              func = 'log'; // ln devient log naturel (base e)
-            } else if (func === 'log') {
-              // Logarithme base 10
-              return `(Math.log(${value}) / Math.log(10))`;
-            } else if (func === 'pow') {
-              // Si pow( x ) = x^2
-              return `Math.pow(${value}, 2)`;
-            } else if (func === 'exp') {
-              // Exponentielle exp(x) => Math.exp(x)
-              return `Math.exp(${value})`;
-            }
-            return `Math.${func}(${value})`;
-          }
-        );
-
-        // Évalue l'expression calculée
-        const result = Number(eval(sanitizedExpression).toFixed(8));
-
-        // Met à jour l'affichage et l'expression
-        this.history.push(`${this.currentDisplay} = ${result}`);
-        console.log('History:', this.history);
-        this.currentDisplay = result.toString();
-        this.expression = result.toString();
-      } catch (error) {
-        console.error('Erreur de calcul:', error);
-        this.currentDisplay = 'Erreur';
-        this.expression = '';
-      }
+      const result = compute(this.expression);
+      this.history.push(`${this.currentDisplay} = ${result.currentDisplay}`);
+      this.currentDisplay = result.currentDisplay;
+      this.expression = result.expression;
     },
 
     retainFocus() {
@@ -439,7 +277,6 @@ export default {
 
     handleKeyPress(event) {
       const key = event.key;
-
       if (/^[+\-x/^%]$/.test(key)) {
         this.handleOperator(` ${key} `);
       } else if (/[0-9.]/.test(key)) {
@@ -458,16 +295,17 @@ export default {
     toggleMode() {
       this.isScientificMode = !this.isScientificMode;
     },
+
     toggleHistory() {
-      console.log('Toggling history...');
       this.showHistory = !this.showHistory;
-      console.log('Show history:', this.showHistory);
     },
   },
+
   mounted() {
     window.addEventListener('keydown', this.handleKeyPress);
     this.$refs.calculator.focus();
   },
+
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeyPress);
   },
@@ -582,7 +420,7 @@ button:not(.operator):not(.special):not(.equals):not(.clear):hover {
   }
 
   .toggle {
-    margin-top: 6px;
+    margin-top: px;
     font-size: 1.1em;
   }
 
