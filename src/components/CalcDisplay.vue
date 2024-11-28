@@ -1,10 +1,10 @@
 <template>
   <div class="input-container">
+    <button class="history-button" @click="$emit('toggle-history')">🕒</button>
     <input type="text" :value="display" readonly />
     <button class="delete-button" @click="$emit('delete-last')">⌫</button>
   </div>
 </template>
-
 
 <script>
 export default {
@@ -19,7 +19,7 @@ export default {
 .input-container {
   position: relative;
   width: 100%;
-  max-width: 350px;
+  max-width: 450px;
 }
 
 input {
@@ -47,5 +47,16 @@ input {
 
 .delete-button:hover {
   color: red;
+}
+
+.history-button {
+  position: absolute;
+  left: 5px;
+  top: 12%;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #333;
 }
 </style>

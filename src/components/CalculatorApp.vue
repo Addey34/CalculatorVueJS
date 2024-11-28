@@ -1,6 +1,11 @@
 <template>
   <div class="calculator" ref="calculator" tabindex="0" @click="retainFocus">
-    <CalcDisplay :display="currentDisplay" @delete-last="deleteLastCharacter" />
+    <CalcHistory v-if="showHistory" :history="history" />
+    <CalcDisplay
+      :display="currentDisplay"
+      @delete-last="deleteLastCharacter"
+      @toggle-history="toggleHistory"
+    />
     <div class="buttons">
       <!-- Mode élémentaire : chiffres et opérateurs basiques -->
       <template v-if="!isScientificMode">
@@ -183,17 +188,20 @@
 <script>
 import CalcButton from './CalcButton.vue';
 import CalcDisplay from './CalcDisplay.vue';
+import CalcHistory from './CalcHistory.vue';
 
 export default {
   name: 'CalculatorApp',
   components: {
     CalcButton,
     CalcDisplay,
+    CalcHistory,
   },
   data() {
     return {
       currentDisplay: '',
       expression: '',
+      showHistory: false,
       isScientificMode: false,
       history: [],
       constants: {
@@ -411,12 +419,13 @@ export default {
         );
 
         // Évalue l'expression calculée
-        const result = Number(eval(sanitizedExpression).toFixed(8)); // Précision à 10 décimales
+        const result = Number(eval(sanitizedExpression).toFixed(8));
 
         // Met à jour l'affichage et l'expression
+        this.history.push(`${this.currentDisplay} = ${result}`);
+        console.log('History:', this.history);
         this.currentDisplay = result.toString();
         this.expression = result.toString();
-        this.history.push(`${this.expression} = ${result}`);
       } catch (error) {
         console.error('Erreur de calcul:', error);
         this.currentDisplay = 'Erreur';
@@ -449,6 +458,11 @@ export default {
     toggleMode() {
       this.isScientificMode = !this.isScientificMode;
     },
+    toggleHistory() {
+      console.log('Toggling history...');
+      this.showHistory = !this.showHistory;
+      console.log('Show history:', this.showHistory);
+    },
   },
   mounted() {
     window.addEventListener('keydown', this.handleKeyPress);
@@ -465,7 +479,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 500px;
+  max-width: 450px;
   margin: auto;
   padding: 20px;
   background-color: #333;
@@ -473,20 +487,108 @@ export default {
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
 }
-.calculator:hover {
-  transform: scale(1.1);
-}
+
 .buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   width: 100%;
 }
+
 .toggle {
   margin-top: 10px;
   grid-column: span 4;
   background-color: #555;
   color: #fff;
   font-weight: bold;
+  font-size: 1.2em;
+}
+
+.button {
+  font-size: 1.5em;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  background-color: #555;
+  text-align: center;
+  width: 100%;
+  height: 60px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+}
+
+.operator {
+  background-color: #9e9e9e;
+}
+
+.special {
+  background-color: #ff9800;
+}
+
+.equals {
+  background-color: #f44336;
+  grid-column: span 2; /* Prend 2 cases sur 4 */
+}
+
+.clear {
+  background-color: #f44336;
+}
+
+button:not(.operator):not(.special):not(.equals):not(.clear):hover {
+  background-color: #6d6d6d;
+}
+
+.operator:hover {
+  background-color: #b0b0b0;
+}
+
+.special:hover {
+  background-color: #ffb74d;
+}
+
+.equals:hover,
+.clear:hover {
+  background-color: #ff6659;
+}
+
+@media (max-width: 600px) {
+  .calculator {
+    padding: 15px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .buttons {
+    gap: 8px;
+  }
+
+  .toggle {
+    margin-top: 8px;
+    font-size: 1.3em;
+  }
+
+  .button {
+    font-size: 1.3em;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .buttons {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .toggle {
+    margin-top: 6px;
+    font-size: 1.1em;
+  }
+
+  .button {
+    font-size: 1.2em;
+    padding: 10px;
+  }
 }
 </style>
